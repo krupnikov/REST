@@ -2,16 +2,14 @@ import json
 import datetime
 import subprocess
 import test
-from config import Config
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask import Flask
 
 
 app = Flask(__name__)
-app.config.from_object(Config)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 
 class Task(db.Model):
@@ -22,11 +20,21 @@ class Task(db.Model):
     def __repr__(self):
         return ''.format(self.id)
 
+db.create_all()
+
+# def update_task():
+
 def to_json(data):
     return json.dumps(data) + '\n'
 
-@app.route('/')
-@app.route('/api/tasks', methods=['GET'])
+@app.route('/task/<id>', methods=['GET'])
+def get_task_info(id=None):
+    q = Task.query.filter(id=int(id))
+    print(q)
+    return str(q)
+
+
+@app.route('/', methods=['GET'])
 def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     for_json = {'create_time': create_time}
