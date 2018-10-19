@@ -1,7 +1,9 @@
 import json
 import datetime
+import threading
+import time
+import queue
 import subprocess
-import test
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 
@@ -22,14 +24,22 @@ class Task(db.Model):
 
 db.create_all()
 
+from app.models import Task
+q = queue.Queue()
+
 # def update_task():
+
+def add_to_queue(arg):
+    q.put(arg)
+    start_time = time.time()
+    db.Query(Task).filter(id = arg).update(start_time)
 
 def to_json(data):
     return json.dumps(data) + '\n'
 
 @app.route('/task/<id>', methods=['GET'])
-def get_task_info(id=None):
-    q = Task.query.filter(id=int(id))
+def get_task_info(id):
+    q = db.Query(Task).all()
     print(q)
     return str(q)
 
@@ -40,9 +50,10 @@ def gen_tasks():
     for_json = {'create_time': create_time}
     t = Task(create_time= create_time)
     db.session.add(t)
-    start_time, time_to_execute = test.main()
-    for_json['start_time'] = start_time
-    for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
+    subprocess.run('test.py', shell=True)
+    # start_time, time_to_execute = test.main()
+    # for_json['start_time'] = start_time
+    # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
     db.session.commit()
     return str(t.id)
 
