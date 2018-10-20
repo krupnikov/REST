@@ -1,9 +1,10 @@
+import os
 from flask import Flask
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app/app.db'
 
-from app import routes, database
+from app import routes
 
-database.init_db()
+if os.path.exists('app.db') == False:
+    from app.database import init_db
+    database.init_db()

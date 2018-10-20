@@ -5,6 +5,8 @@ import queue
 import subprocess
 
 from app import app
+from app.database import db_session
+from app.models import Task
 
 q = queue.Queue()
 
