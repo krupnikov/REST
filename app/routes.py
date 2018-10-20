@@ -7,7 +7,7 @@ from . import test
 
 from app import app
 from app.database import db_session
-from sqlalchemy.sql import update
+from sqlalchemy import Table
 from app.models import Task
 
 q = queue.Queue()
@@ -15,11 +15,16 @@ q = queue.Queue()
 # def update_task():
 
 def add_to_queue(arg):
-    q.put(subprocess.run('test.py', shell=True))
-    start_time = time.time()
-    task = Task(id=arg)
-    db_session.add(task)
+    code = subprocess.run('test.py', shell=True)
+    q.put(code)
+    start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    str_time = time.time()
+    db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg))
     db_session.commit()
+    if code == 0:
+        exec_time = (time.time() - str_time) // 1
+        db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg))
+        db_session.commit()
 
 
 def to_json(data):
@@ -43,14 +48,13 @@ def get_task_info(id):
 @app.route('/', methods=['GET'])
 def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    for_json = {'create_time': create_time}
     t = Task(create_time=create_time)
     db_session.add(t)
-    add_to_queue(t.id)
     # start_time, time_to_execute = test.main()
     # for_json['start_time'] = start_time
     # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
     db_session.commit()
+    add_to_queue(t.id)
     return str(t.id)
 
 
