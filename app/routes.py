@@ -7,6 +7,7 @@ from . import test
 
 from app import app
 from app.database import db_session
+from sqlalchemy.sql import update
 from app.models import Task
 
 q = queue.Queue()
@@ -14,8 +15,11 @@ q = queue.Queue()
 # def update_task():
 
 def add_to_queue(arg):
-    q.put(arg)
+    q.put(subprocess.run('test.py', shell=True))
     start_time = time.time()
+    task = Task(id=arg)
+    db_session.add(task)
+    db_session.commit()
 
 
 def to_json(data):
@@ -42,7 +46,7 @@ def gen_tasks():
     for_json = {'create_time': create_time}
     t = Task(create_time=create_time)
     db_session.add(t)
-    subprocess.run('test.py', shell=True)
+    add_to_queue(t.id)
     # start_time, time_to_execute = test.main()
     # for_json['start_time'] = start_time
     # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
