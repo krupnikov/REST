@@ -17,21 +17,30 @@ def add_to_queue(arg):
     q.put(arg)
     start_time = time.time()
 
-def to_json(data):
-    return json.dumps(data) + '\n'
 
-@app.route('/task/<id>', methods=['GET'])
+def to_json(data):
+    l = data.split(sep=';')
+    dic = {'status': 'In Queue', 'create_time': None, 'start_time': None, 'exec_time': None}
+    dic['create_time'] = l[0]
+    dic['start_time'] = l[1]
+    dic['exec_time'] = l[2]
+    if (dic['start_time'] != 'None') and (dic['exec_time'] == 'None'):
+        dic['status'] = 'Run'
+    elif (dic['start_time'] !='None') and (dic['exec_time'] != 'None'):
+        dic['status'] = 'Completed'
+    return json.dumps(dic, indent=4)
+
+@app.route('/task/<int:id>', methods=['GET'])
 def get_task_info(id):
-    # q = db.Query(Task).all()
-    print(q)
-    return str(q)
+    q = str(Task.query.filter(Task.id == id).first())
+    return to_json(q)
 
 
 @app.route('/', methods=['GET'])
 def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     for_json = {'create_time': create_time}
-    t = Task(create_time= create_time)
+    t = Task(create_time=create_time)
     db_session.add(t)
     subprocess.run('test.py', shell=True)
     # start_time, time_to_execute = test.main()
