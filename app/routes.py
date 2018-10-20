@@ -3,6 +3,7 @@ import datetime
 import time
 import queue
 import subprocess
+from . import test
 
 from app import app
 from app.database import db_session
@@ -36,7 +37,7 @@ def gen_tasks():
     # start_time, time_to_execute = test.main()
     # for_json['start_time'] = start_time
     # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
-    # db.session.commit()
+    db_session.commit()
     return str(t.id)
 
 
