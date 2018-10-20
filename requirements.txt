@@ -1,3 +1,2 @@
 FLASK
-FLASK-SQLAlchemy
 SQLAlchemy
