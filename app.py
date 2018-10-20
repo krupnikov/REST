@@ -4,27 +4,10 @@ import threading
 import time
 import queue
 import subprocess
-from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
 
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-
-class Task(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    create_time = db.Column(db.String(128))
-    start_time = db.Column(db.String(128))
-    exec_time = db.Column(db.String(128))
-    def __repr__(self):
-        return ''.format(self.id)
 
 db.create_all()
 
-from app.models import Task
 q = queue.Queue()
 
 # def update_task():
@@ -56,7 +39,3 @@ def gen_tasks():
     # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
     db.session.commit()
     return str(t.id)
-
-
-if __name__ == '__main__':
-    app.run(host='192.168.0.10', port=8083, debug=True)
