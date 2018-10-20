@@ -30,8 +30,8 @@ def get_task_info(id):
 def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     for_json = {'create_time': create_time}
-    # t = Task(create_time= create_time)
-    # db.session.add(t)
+    t = Task(create_time= create_time)
+    db_session.add(t)
     subprocess.run('test.py', shell=True)
     # start_time, time_to_execute = test.main()
     # for_json['start_time'] = start_time
