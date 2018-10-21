@@ -1,6 +1,5 @@
 import json
 import datetime
-import time
 import queue
 import threading
 
@@ -22,17 +21,13 @@ def worker():
         q.task_done()
 
 def do_work(arg):
-    # s = subprocess.run('test.py', shell=True)
     s = main()
     start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
     db_session.commit()
-    print('id:' + str(arg.id), 'start_time:' + start_time)
-    time.sleep(5)
     exec_time = s
     db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
     db_session.commit()
-    print('id:' + str(arg.id), 'exec_time:' + str(exec_time))
 
 def gen_workers():
     for i in range(num_worker_threads):
