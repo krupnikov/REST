@@ -15,6 +15,7 @@ num_worker_threads = 2
 def worker():
     while True:
         item = q.get()
+        print(item)
         if item is None:
             break
         do_work(item)
