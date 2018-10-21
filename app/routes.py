@@ -2,30 +2,46 @@ import json
 import datetime
 import time
 import queue
-import subprocess
-from . import test
+import threading
 
 from app import app
 from app.database import db_session
-from sqlalchemy import Table
 from app.models import Task
+from app.test import main
 
 q = queue.Queue()
+threads = []
+num_worker_threads = 2
 
-# def update_task():
+def worker():
+    while True:
+        item = q.get()
+        if item is None:
+            break
+        do_work(item)
+        q.task_done()
+
+def do_work(arg):
+    # s = subprocess.run('test.py', shell=True)
+    s = main()
+    start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
+    db_session.commit()
+    print('id:' + str(arg.id), 'start_time:' + start_time)
+    time.sleep(5)
+    exec_time = s
+    db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
+    db_session.commit()
+    print('id:' + str(arg.id), 'exec_time:' + str(exec_time))
+
+def gen_workers():
+    for i in range(num_worker_threads):
+        t = threading.Thread(target=worker)
+        t.start()
+        threads.append(t)
 
 def add_to_queue(arg):
-    code = subprocess.run('test.py', shell=True)
-    q.put(code)
-    start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    str_time = time.time()
-    db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg))
-    db_session.commit()
-    if code == 0:
-        exec_time = (time.time() - str_time) // 1
-        db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg))
-        db_session.commit()
-
+    q.put(arg)
 
 def to_json(data):
     l = data.split(sep=';')
@@ -50,11 +66,7 @@ def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     t = Task(create_time=create_time)
     db_session.add(t)
-    # start_time, time_to_execute = test.main()
-    # for_json['start_time'] = start_time
-    # for_json['time_to_execute'] = '{0} sec'.format(time_to_execute)
     db_session.commit()
-    add_to_queue(t.id)
+    add_to_queue(t)
+    gen_workers()
     return str(t.id)
-
-
