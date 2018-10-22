@@ -15,7 +15,6 @@ num_worker_threads = 2
 def worker():
     while True:
         item = q.get()
-        print(item)
         if item is None:
             break
         do_work(item)
@@ -27,8 +26,10 @@ def do_work(arg):
     db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
     db_session.commit()
     exec_time = s
+    print(exec_time)
     db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
     db_session.commit()
+    return print('Task is Done!')
 
 def gen_workers():
     for i in range(num_worker_threads):
@@ -42,9 +43,9 @@ def add_to_queue(arg):
 def to_json(data):
     l = data.split(sep=';')
     dic = {'status': 'In Queue', 'create_time': None, 'start_time': None, 'exec_time': None}
-    dic['create_time'] = l[0]
-    dic['start_time'] = l[1]
-    dic['exec_time'] = l[2]
+    dic['create_time'] = l[1]
+    dic['start_time'] = l[2]
+    dic['exec_time'] = l[3]
     if (dic['start_time'] != 'None') and (dic['exec_time'] == 'None'):
         dic['status'] = 'Run'
     elif (dic['start_time'] !='None') and (dic['exec_time'] != 'None'):
