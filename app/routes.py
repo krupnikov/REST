@@ -15,8 +15,6 @@ num_worker_threads = 2
 def worker():
     while True:
         item = q.get()
-        if item is None:
-            break
         do_work(item)
         q.task_done()
 
@@ -26,10 +24,9 @@ def do_work(arg):
     db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
     db_session.commit()
     exec_time = s
-    print(exec_time)
     db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
     db_session.commit()
-    return print('Task is Done!')
+    return print('Task \t' + str(arg.id)  + ' \t is Done!')
 
 def gen_workers():
     for i in range(num_worker_threads):
