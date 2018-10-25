@@ -7,60 +7,58 @@ from app import app
 from app.database import db_session
 from app.models import Task
 from app.test import main
+from sqlalchemy import update
+
+@app.teardown_appcontext
+def shutdown_session(exception= None):
+    db_session.remove()
 
 q = queue.Queue()
 threads = []
 num_worker_threads = 2
 
-def worker():
-    while True:
-        item = q.get()
-        do_work(item)
-        q.task_done()
+# class Worker(threading.Thread):
+#
+#     def __init__(self, work_queue):
+#
 
-def do_work(arg):
-    s = main()
-    start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
-    db_session.commit()
-    exec_time = s
-    db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
-    db_session.commit()
-    return print('Task \t' + str(arg.id)  + ' \t is Done!')
+# def worker():
+#     while True:
+#         item = q.get()
+#         do_work(item)
+#         q.task_done()
 
-def gen_workers():
-    for i in range(num_worker_threads):
-        t = threading.Thread(target=worker)
-        t.start()
-        threads.append(t)
+# def do_work(arg):
+#     start_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+#     s = main()
+#     db_session.execute("UPDATE tasks SET start_time='{0}' WHERE id={1}".format(start_time, arg.id))
+#     db_session.commit()
+#     exec_time = s
+#     db_session.execute("UPDATE tasks SET exec_time='{0}' WHERE id={1}".format(exec_time, arg.id))
+#     db_session.commit()
 
-def add_to_queue(arg):
-    q.put(arg)
-
-def to_json(data):
-    l = data.split(sep=';')
-    dic = {'status': 'In Queue', 'create_time': None, 'start_time': None, 'exec_time': None}
-    dic['create_time'] = l[1]
-    dic['start_time'] = l[2]
-    dic['exec_time'] = l[3]
-    if (dic['start_time'] != 'None') and (dic['exec_time'] == 'None'):
-        dic['status'] = 'Run'
-    elif (dic['start_time'] !='None') and (dic['exec_time'] != 'None'):
-        dic['status'] = 'Completed'
-    return json.dumps(dic, indent=4)
-
-@app.route('/task/<int:id>', methods=['GET'])
-def get_task_info(id):
-    q = str(Task.query.filter(Task.id == id).first())
-    return to_json(q)
+# def gen_workers():
+#     for i in range(num_worker_threads):
+#         trd = threading.Thread(target=worker)
+#         trd.start()
+#         threads.append(trd)
 
 
-@app.route('/', methods=['GET'])
+@app.route('/task', methods=['PUT'])
 def gen_tasks():
-    create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    t = Task(create_time=create_time)
+    create_time = datetime.datetime.now()
+    t = Task(create_time=create_time, status='In Queue')
     db_session.add(t)
+    q.put(t)
     db_session.commit()
-    add_to_queue(t)
-    gen_workers()
+    # gen_workers()
     return str(t.id)
+
+@app.route('/task/info/<int:id>', methods=['GET'])
+def get_task_info(id):
+    que = db_session.query(Task).filter(id == id).first()
+    out = {'status': que.status,
+           'create_time': str(que.create_time),
+           'start_time': str(que.start_time),
+           'exec_time': str(que.exec_time)}
+    return json.dumps(out, indent=4)
