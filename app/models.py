@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy import Column, Integer, String, DateTime
 from app.database import Base
 
 # Class to describe ORM TASK in db
@@ -10,10 +10,13 @@ class Task(Base):
     create_time = Column(DateTime)
     start_time = Column(DateTime)
     exec_time = Column(DateTime)
+    status = Column(String(10))
 
-    def __init__(self, create_time):
-        self.status = {'status': 'In Queue', 'create_time': None, 'start_time': None, 'exec_time': None}
+    def __init__(self, create_time=None, start_time=None, exec_time=None, status=None):
         self.create_time = create_time
+        self.start_time = start_time
+        self.exec_time = exec_time
+        self.status = status
 
     def __repr__(self):
-        return "{0};{1};{2};{3}".format(self.id, self.create_time, self.start_time, self.exec_time)
+        return '{0}'.format(self.id)
