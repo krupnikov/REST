@@ -51,13 +51,13 @@ def to_json(data):
         dic['status'] = 'Completed'
     return json.dumps(dic, indent=4)
 
-@app.route('/task/<int:id>', methods=['GET'])
+@app.route('/api/v1/task/<int:id>', methods=['GET'])
 def get_task_info(id):
     q = str(Task.query.filter(Task.id == id).first())
     return to_json(q)
 
 
-@app.route('/', methods=['GET'])
+@app.route('/api/v1', methods=['GET'])
 def gen_tasks():
     create_time = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     t = Task(create_time=create_time)
